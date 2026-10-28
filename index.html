@@ -1,0 +1,524 @@
+<!doctype html>
+<html lang="el">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Reviewpagina</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: split screen. Dark brand panel with vertical progress on the left, form card on the right; stacks on phones. */
+:root {
+  --bg: #eef2f1;
+  --surface: #ffffff;
+  --ink: #14232b;
+  --muted: #5b6b72;
+  --line: #d5dedd;
+  --panel: #14232b;
+  --panel-ink: #e9f1ef;
+  --panel-muted: #8fa5a8;
+  --accent: #0b6e6e;
+  --accent-ink: #ffffff;
+  --up: #2f9e57;
+  --down: #d64545;
+  --focus: #0b6e6e;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d171c; --surface: #162329; --ink: #e9f1ef; --muted: #93a7ab; --line: #28393f;
+    --panel: #0a1115; --panel-ink: #e9f1ef; --panel-muted: #7f979b;
+    --accent: #3fb5ae; --accent-ink: #072124; --up: #3fb871; --down: #e25b5b; --focus: #3fb5ae;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d171c; --surface: #162329; --ink: #e9f1ef; --muted: #93a7ab; --line: #28393f;
+  --panel: #0a1115; --panel-ink: #e9f1ef; --panel-muted: #7f979b;
+  --accent: #3fb5ae; --accent-ink: #072124; --up: #3fb871; --down: #e25b5b; --focus: #3fb5ae;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px;
+}
+h1, h2, h3 { font-family: var(--font-display); margin: 0; text-wrap: balance; line-height: 1.12; }
+button, input, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.shell {
+  max-width: 1040px; margin: 0 auto; display: grid; grid-template-columns: 5fr 7fr;
+  border-radius: 20px; overflow: hidden; border: 1px solid var(--line); background: var(--surface);
+  min-height: 640px;
+}
+.panel {
+  background: var(--panel); color: var(--panel-ink); padding: 36px 32px;
+  display: flex; flex-direction: column; gap: 32px; min-width: 0;
+}
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.brand b { font-family: var(--font-display); font-size: 22px; letter-spacing: -0.01em; }
+.lang { display: flex; gap: 4px; }
+.lang button {
+  background: transparent; border: 1px solid transparent; color: var(--panel-muted);
+  padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; letter-spacing: .04em;
+}
+.lang button[aria-pressed="true"] { color: var(--panel-ink); border-color: var(--panel-muted); }
+.pitch h1 { font-size: clamp(28px, 4vw, 40px); }
+.pitch p { color: var(--panel-muted); margin: 12px 0 0; max-width: 34ch; }
+.steps { list-style: none; margin: auto 0 0; padding: 0; display: grid; gap: 0; }
+.steps li { display: grid; grid-template-columns: 28px 1fr; gap: 12px; position: relative; padding-bottom: 20px; color: var(--panel-muted); }
+.steps li:last-child { padding-bottom: 0; }
+.steps li::before {
+  content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--panel-muted); opacity: .35;
+}
+.steps li:last-child::before { display: none; }
+.dot {
+  width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--panel-muted);
+  display: grid; place-items: center; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.steps li[data-state="active"] { color: var(--panel-ink); }
+.steps li[data-state="active"] .dot { border-color: var(--panel-ink); color: var(--panel-ink); }
+.steps li[data-state="done"] { color: var(--panel-ink); }
+.steps li[data-state="done"] .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.steps strong { display: block; font-size: 15px; }
+.steps span { font-size: 13px; }
+
+.main { padding: 40px 40px 36px; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.step[hidden] { display: none; }
+.q { font-size: clamp(24px, 3.2vw, 32px); margin-bottom: 8px; }
+.sub { color: var(--muted); margin: 0 0 28px; }
+
+.thumbs { display: flex; gap: 20px; margin-bottom: 12px; }
+.thumb-btn {
+  width: 104px; height: 104px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface);
+  color: var(--muted); cursor: pointer; display: grid; place-items: center;
+  transition: transform .12s ease, background-color .12s ease, border-color .12s ease, color .12s ease;
+}
+.thumb-btn svg { width: 46px; height: 46px; fill: currentColor; }
+.thumb-btn { text-decoration: none; padding: 0; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.thumb-btn:hover { transform: translateY(-2px); }
+.thumb-btn[data-v="up"] { background: var(--up); border-color: var(--up); color: #fff; }
+.thumb-btn[data-v="down"] { background: var(--down); border-color: var(--down); color: #fff; }
+.thumb-btn[data-v="up"][data-selected="true"] { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--up); }
+.thumb-btn[data-v="down"][data-selected="true"] { box-shadow: 0 0 0 4px var(--surface), 0 0 0 7px var(--down); }
+.thumb-label { min-height: 24px; font-weight: 600; margin: 0 0 4px; }
+
+.field { margin-top: 22px; display: grid; gap: 8px; }
+.field > label, .field > .lbl { font-weight: 600; font-size: 15px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { position: relative; }
+.chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; margin: 0; }
+.chip span {
+  display: block; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 14px;
+  background: var(--surface); pointer-events: none;
+}
+.chip input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.chip input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
+textarea, input[type="text"] {
+  width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px;
+  background: var(--surface); resize: vertical;
+}
+textarea { min-height: 120px; }
+.count { color: var(--muted); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+
+.photos { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.drop {
+  display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1.5px dashed var(--muted);
+  border-radius: 10px; cursor: pointer; font-size: 14px; color: var(--muted); background: transparent;
+}
+.drop:hover { color: var(--ink); border-color: var(--ink); }
+.thumb { position: relative; width: 64px; height: 64px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button {
+  position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; cursor: pointer;
+  background: rgba(0,0,0,.65); color: #fff; font-size: 14px; line-height: 1; padding: 0;
+}
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+.check input { margin-top: 4px; accent-color: var(--accent); }
+.notice {
+  margin: 0 0 28px; padding: 12px 14px; border-radius: 10px; background: var(--bg); font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.actions { display: flex; gap: 12px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
+.btn {
+  background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 13px 22px;
+  font-weight: 600; cursor: pointer;
+}
+.link { background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; padding: 8px 0; }
+.err { color: #c0392b; font-size: 14px; min-height: 20px; margin: 8px 0 0; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .err { color: #ff8a7a; } }
+:root[data-theme="dark"] .err { color: #ff8a7a; }
+
+.done-mark {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; margin-bottom: 20px;
+}
+.done-mark svg { width: 32px; height: 32px; stroke: currentColor; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.summary { margin-top: 20px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 8px; }
+.summary .verdict { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.summary .verdict svg { width: 22px; height: 22px; fill: currentColor; }
+.summary .verdict.up { color: var(--up); }
+.summary .verdict.down { color: var(--down); }
+.summary p { margin: 0; overflow-wrap: anywhere; }
+.summary small { color: var(--muted); }
+
+@media (max-width: 820px) and (min-width: 601px) {
+  .shell { grid-template-columns: minmax(210px, 4fr) 7fr; min-height: 560px; }
+  .panel { padding: 28px 22px; gap: 24px; }
+  .main { padding: 32px 28px; }
+  .pitch h1 { font-size: 26px; }
+  .pitch p { display: none; }
+}
+@media (max-width: 600px) {
+  .shell { grid-template-columns: 1fr; min-height: 0; }
+  .panel { padding: 24px 20px; gap: 20px; }
+  .steps { grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 0; }
+  .steps li { grid-template-columns: 1fr; padding: 0; gap: 6px; }
+  .steps li::before { display: none; }
+  .steps span { display: none; }
+  .main { padding: 24px 20px 28px; }
+  .thumb-btn { width: 96px; height: 96px; }
+  body { padding-block: 12px; }
+  .pitch { display: none; }
+  .brand b { font-size: 20px; }
+  .lang button { padding: 8px 10px; }
+  .steps strong { font-size: 13px; line-height: 1.3; }
+  .dot { width: 24px; height: 24px; font-size: 12px; }
+  .thumbs { justify-content: center; margin-top: 8px; }
+  .thumb-label { text-align: center; }
+  .chip span { padding: 10px 14px; }
+  .actions .btn { flex: 1 1 100%; padding: 15px 22px; }
+  .actions .link { padding: 12px 0; }
+  .drop { padding: 12px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { .thumb-btn { transition: none; } }
+</style>
+</head>
+<body>
+
+
+<main class="shell">
+  <aside class="panel">
+    <div class="brand">
+      <b id="brandName">Theona</b>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="el" aria-pressed="true">EL</button>
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+    <div class="pitch">
+      <h1 id="pitchTitle"></h1>
+      <p id="pitchText"></p>
+    </div>
+    <ol class="steps" id="steps">
+      <li data-state="active"><div class="dot">1</div><div><strong id="s1t"></strong></div></li>
+      <li data-state="todo"><div class="dot">2</div><div><strong id="s2t"></strong></div></li>
+      <li data-state="todo"><div class="dot">3</div><div><strong id="s3t"></strong></div></li>
+    </ol>
+  </aside>
+
+  <section class="main">
+    <div class="notice" id="incentiveBox" hidden></div>
+    <div class="step" id="step1">
+      <h2 class="q" id="q1"></h2>
+      <p class="sub" id="q1sub"></p>
+      <div class="thumbs" role="group" id="thumbs" aria-labelledby="q1"></div>
+      <p class="thumb-label" id="thumbLabel" aria-live="polite"></p>
+    </div>
+
+    <form class="step" id="step2" hidden novalidate>
+      <h2 class="q" id="q2"></h2>
+      <div class="field" id="topicsField">
+        <span class="lbl" id="topicsLbl"></span>
+        <div class="chips" id="chips" role="group" aria-labelledby="topicsLbl"></div>
+      </div>
+      <div class="field">
+        <label for="text" id="textLbl"></label>
+        <textarea id="text" maxlength="600"></textarea>
+        <div class="count"><span id="cnt">0</span>/600</div>
+      </div>
+      <div class="field" id="photoField">
+        <span class="lbl" id="photoLbl"></span>
+        <div class="photos" id="photos">
+          <label class="drop" for="file" id="dropLbl"></label>
+        </div>
+        <input type="file" id="file" accept="image/*" multiple hidden>
+      </div>
+      <div class="field" id="nameField">
+        <label for="name" id="nameLbl"></label>
+        <input type="text" id="name" autocomplete="given-name" maxlength="40">
+      </div>
+      <div class="field" id="consentField">
+        <label class="check"><input type="checkbox" id="consent"><span id="consentTxt"></span></label>
+      </div>
+      <p class="err" id="err" role="alert"></p>
+      <div class="actions">
+        <button class="btn" type="submit" id="submitBtn"></button>
+        <button class="link" type="button" id="backBtn"></button>
+      </div>
+    </form>
+
+    <div class="step" id="step3" hidden>
+      <div class="done-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <h2 class="q" id="doneTitle"></h2>
+      <p class="sub" id="doneText"></p>
+      <div class="summary" id="summary"></div>
+      <div class="actions"><button class="link" type="button" id="againBtn"></button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  // Per store, change only these values.
+  var CONFIG = {
+    brand: "Theona",
+    trustpilotUrl: "https://uk.trustpilot.com/evaluate/theona.gr", // Both thumbs open this link.
+    incentive: null // Reward banner is off. Set { count, percent } to show it again.
+  };
+
+  var T = {
+    nl: {
+      pitchTitle: "Hoe was jouw bestelling?",
+      pitchText: "Je ervaring helpt anderen kiezen en helpt ons beter te worden. Eerlijk mag, ook als het kritisch is.",
+      s1t: "Review geven", s2t: "Bevestiging per e-mail", s3t: "Geld terug op je rekening",
+      incentive: "Alleen voor de eerste {n} beoordelaars: je bestelling wordt {p}% terugbetaald, of je review nu positief of kritisch is.",
+      q1: "Wat was je ervaring met {brand}?", q1sub: "Kies een duimpje.",
+      q2down: "Vertel ons wat er is gebeurd", textLblDown: "Vertel ons wat er is gebeurd",
+      textPhDown: "Wat ging er niet goed? Wat hadden we beter kunnen doen?", submitDown: "Verzenden",
+      errText: "Vertel ons kort wat er is gebeurd.",
+      doneTitleDown: "Bedankt voor je feedback", doneTextDown: "We hebben je bericht ontvangen.",
+      labels: { up: "Tevreden", down: "Niet tevreden" },
+      q2: "Vertel ons meer",
+      topicsLbl: "Waar ging het over?",
+      topics: ["Productkwaliteit", "Levering", "Verpakking", "Klantenservice", "Prijs-kwaliteit"],
+      textLbl: "Je ervaring in eigen woorden",
+      textPh: "Wat viel je op? Wat zou je anderen willen vertellen?",
+      photoLbl: "Foto toevoegen (optioneel)", dropLbl: "+ Foto kiezen",
+      nameLbl: "Voornaam (optioneel)",
+      consent: "Mijn voornaam en review mogen bij het product getoond worden.",
+      submit: "Review versturen", back: "Terug",
+      errRating: "Kies eerst een duimpje.",
+      errConsent: "Vink aan dat je review getoond mag worden.",
+      doneTitle: "Bedankt voor je review", doneText: "Bevestig je review via de e-mail die we je sturen. Daarna volgt je terugbetaling.",
+      again: "Nog een review schrijven", noText: "Geen tekst toegevoegd.", photosN: " foto's"
+    },
+    en: {
+      pitchTitle: "How was your order?",
+      pitchText: "Your experience helps others choose and helps us improve. Honest feedback is welcome, even when it is critical.",
+      s1t: "Leave a review", s2t: "Confirmation by email", s3t: "Money back to your account",
+      incentive: "Only for the first {n} reviewers: your order is refunded {p}%, whether your review is positive or critical.",
+      q1: "How was your experience with {brand}?", q1sub: "Pick a thumb.",
+      q2down: "Tell us what happened", textLblDown: "Tell us what happened",
+      textPhDown: "What went wrong? What could we have done better?", submitDown: "Send",
+      errText: "Please tell us briefly what happened.",
+      doneTitleDown: "Thanks for your feedback", doneTextDown: "We have received your message.",
+      labels: { up: "Satisfied", down: "Not satisfied" },
+      q2: "Tell us more",
+      topicsLbl: "What was it about?",
+      topics: ["Product quality", "Delivery", "Packaging", "Customer service", "Value for money"],
+      textLbl: "Your experience in your own words",
+      textPh: "What stood out? What would you tell other buyers?",
+      photoLbl: "Add a photo (optional)", dropLbl: "+ Choose photo",
+      nameLbl: "First name (optional)",
+      consent: "My first name and review may be shown next to the product.",
+      submit: "Submit review", back: "Back",
+      errRating: "Please pick a thumb first.",
+      errConsent: "Please tick that your review may be shown.",
+      doneTitle: "Thanks for your review", doneText: "Confirm your review through the email we send you. Your refund follows after that.",
+      again: "Write another review", noText: "No text added.", photosN: " photos"
+    },
+    de: {
+      pitchTitle: "Wie war deine Bestellung?",
+      pitchText: "Deine Erfahrung hilft anderen bei der Wahl und hilft uns, besser zu werden. Ehrliches Feedback ist willkommen, auch kritisches.",
+      s1t: "Bewertung abgeben", s2t: "Bestätigung per E-Mail", s3t: "Geld zurück auf dein Konto",
+      incentive: "Nur für die ersten {n} Bewerter: Wir erstatten dir {p}% deiner Bestellung, egal ob deine Bewertung positiv oder kritisch ist.",
+      q1: "Wie war deine Erfahrung mit {brand}?", q1sub: "Wähle einen Daumen.",
+      q2down: "Erzähl uns, was passiert ist", textLblDown: "Erzähl uns, was passiert ist",
+      textPhDown: "Was lief schief? Was hätten wir besser machen können?", submitDown: "Senden",
+      errText: "Bitte schildere kurz, was passiert ist.",
+      doneTitleDown: "Danke für dein Feedback", doneTextDown: "Wir haben deine Nachricht erhalten.",
+      labels: { up: "Zufrieden", down: "Nicht zufrieden" },
+      q2: "Erzähl uns mehr",
+      topicsLbl: "Worum ging es?",
+      topics: ["Produktqualität", "Lieferung", "Verpackung", "Kundenservice", "Preis-Leistung"],
+      textLbl: "Deine Erfahrung in deinen Worten",
+      textPh: "Was ist dir aufgefallen? Was möchtest du anderen mitteilen?",
+      photoLbl: "Foto hinzufügen (optional)", dropLbl: "+ Foto wählen",
+      nameLbl: "Vorname (optional)",
+      consent: "Mein Vorname und meine Bewertung dürfen beim Produkt angezeigt werden.",
+      submit: "Bewertung senden", back: "Zurück",
+      errRating: "Bitte wähle zuerst einen Daumen.",
+      errConsent: "Bitte bestätige, dass deine Bewertung angezeigt werden darf.",
+      doneTitle: "Danke für deine Bewertung", doneText: "Bestätige deine Bewertung über die E-Mail, die wir dir senden. Danach folgt deine Erstattung.",
+      again: "Weitere Bewertung schreiben", noText: "Kein Text hinzugefügt.", photosN: " Fotos"
+    }
+  };
+
+  T.el = {"pitchTitle":"Πώς ήταν η παραγγελία σου;","pitchText":"Η εμπειρία σου βοηθά τους άλλους να επιλέξουν και εμάς να γίνουμε καλύτεροι. Η ειλικρινής γνώμη είναι πάντα ευπρόσδεκτη, ακόμη και αν είναι επικριτική.","s1t":"Γράψε αξιολόγηση","s2t":"Επιβεβαίωση με email","s3t":"Επιστροφή χρημάτων στον λογαριασμό σου","incentive":"Μόνο για τους πρώτους {n} αξιολογητές: η παραγγελία σου επιστρέφεται κατά {p}%, είτε η αξιολόγησή σου είναι θετική είτε επικριτική.","q1":"Πώς ήταν η εμπειρία σου με το {brand};","q1sub":"Διάλεξε έναν αντίχειρα.","q2down":"Πες μας τι συνέβη","textLblDown":"Πες μας τι συνέβη","textPhDown":"Τι πήγε στραβά; Τι θα μπορούσαμε να κάνουμε καλύτερα;","submitDown":"Αποστολή","errText":"Πες μας σύντομα τι συνέβη.","doneTitleDown":"Ευχαριστούμε για τα σχόλιά σου","doneTextDown":"Λάβαμε το μήνυμά σου.","labels":{"up":"Ικανοποιημένος/η","down":"Μη ικανοποιημένος/η"},"q2":"Πες μας περισσότερα","topicsLbl":"Για ποιο θέμα;","topics":["Ποιότητα προϊόντος","Παράδοση","Συσκευασία","Εξυπηρέτηση πελατών","Σχέση ποιότητας-τιμής"],"textLbl":"Η εμπειρία σου με δικά σου λόγια","textPh":"Τι σου έκανε εντύπωση; Τι θα έλεγες σε άλλους αγοραστές;","photoLbl":"Πρόσθεσε φωτογραφία (προαιρετικό)","dropLbl":"+ Επιλογή φωτογραφίας","nameLbl":"Όνομα (προαιρετικό)","consent":"Το όνομά μου και η αξιολόγησή μου μπορούν να εμφανίζονται δίπλα στο προϊόν.","submit":"Υποβολή αξιολόγησης","back":"Πίσω","errRating":"Διάλεξε πρώτα έναν αντίχειρα.","errConsent":"Επιβεβαίωσε ότι η αξιολόγησή σου μπορεί να εμφανιστεί.","doneTitle":"Ευχαριστούμε για την αξιολόγησή σου","doneText":"Επιβεβαίωσε την αξιολόγησή σου μέσω του email που θα σου στείλουμε. Μετά ακολουθεί η επιστροφή χρημάτων.","again":"Γράψε άλλη αξιολόγηση","noText":"Δεν προστέθηκε κείμενο.","photosN":" φωτογραφίες"};
+  Object.keys(T).forEach(function (k) { if (["el", "en"].indexOf(k) < 0) delete T[k]; });
+  var UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
+  var DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><g transform="rotate(180 12 12)"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></g></svg>';
+  var $ = function (id) { return document.getElementById(id); };
+  var lang = (navigator.language || "el").slice(0, 2);
+  if (!T[lang]) lang = "el";
+  var state = { rating: "", topics: [], files: [], text: "", name: "" };
+
+  $("brandName").textContent = CONFIG.brand;
+  document.title = "Review " + CONFIG.brand;
+
+  // Thumbs
+  var thumbsEl = $("thumbs");
+  ["down", "up"].forEach(function (v) {
+    var b;
+    if (v === "up") {
+      b = document.createElement("a");
+      b.href = CONFIG.trustpilotUrl; b.target = "_blank"; b.rel = "noopener noreferrer";
+    } else {
+      b = document.createElement("button"); b.type = "button";
+    }
+    b.className = "thumb-btn"; b.dataset.v = v;
+    b.innerHTML = v === "up" ? UP : DOWN; thumbsEl.appendChild(b);
+  });
+  function paintThumbs() {
+    var all = thumbsEl.children;
+    for (var k = 0; k < all.length; k++) {
+      var v = all[k].dataset.v;
+      all[k].dataset.selected = String(state.rating === v);
+      all[k].setAttribute("aria-label", T[lang].labels[v] + (v === "up" ? " (Trustpilot)" : ""));
+    }
+    $("thumbLabel").textContent = state.rating ? T[lang].labels[state.rating] : "";
+  }
+  thumbsEl.addEventListener("click", function (e) {
+    var btn = e.target.closest(".thumb-btn"); if (!btn) return;
+    state.rating = btn.dataset.v; paintThumbs();
+    setTimeout(function () { go(2); }, 300);
+  });
+
+  function renderChips() {
+    var wrap = $("chips"); wrap.innerHTML = "";
+    T[lang].topics.forEach(function (name, idx) {
+      var l = document.createElement("label"); l.className = "chip";
+      var inp = document.createElement("input"); inp.type = "checkbox"; inp.value = idx;
+      inp.id = "topic" + idx; inp.checked = state.topics.indexOf(idx) > -1;
+      inp.addEventListener("change", function () {
+        state.topics = state.topics.filter(function (x) { return x !== idx; });
+        if (inp.checked) state.topics.push(idx);
+      });
+      var s = document.createElement("span"); s.textContent = name;
+      l.appendChild(inp); l.appendChild(s); wrap.appendChild(l);
+    });
+  }
+
+  function applyLang() {
+    var t = T[lang];
+    document.documentElement.lang = lang;
+    ["pitchTitle", "pitchText", "s1t", "s2t", "s3t", "q1sub", "q2", "topicsLbl",
+      "textLbl", "photoLbl", "dropLbl", "nameLbl", "doneTitle", "doneText"].forEach(function (id) { $(id).textContent = t[id]; });
+    $("q1").textContent = t.q1.replace("{brand}", CONFIG.brand);
+    $("consentTxt").textContent = t.consent;
+    $("text").placeholder = t.textPh;
+    $("submitBtn").textContent = t.submit;
+    $("backBtn").textContent = t.back;
+    $("againBtn").textContent = t.again;
+    var box = $("incentiveBox");
+    if (CONFIG.incentive) { box.hidden = false; box.textContent = t.incentive.replace("{n}", CONFIG.incentive.count).replace("{p}", CONFIG.incentive.percent); } else { box.hidden = true; }
+    document.querySelectorAll(".lang button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.lang === lang)); });
+    renderChips(); paintThumbs(); applyForm();
+  }
+  function applyForm() {
+    var t = T[lang], neg = state.rating === "down";
+    $("q2").textContent = neg ? t.q2down : t.q2;
+    $("textLbl").textContent = neg ? t.textLblDown : t.textLbl;
+    $("text").placeholder = neg ? t.textPhDown : t.textPh;
+    $("submitBtn").textContent = neg ? t.submitDown : t.submit;
+    ["topicsField", "photoField", "nameField", "consentField"].forEach(function (id) { $(id).hidden = neg; });
+    $("textLbl").classList.toggle("sr-only", neg);
+  }
+  document.querySelector(".lang").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    lang = b.dataset.lang; applyLang();
+    if (!$("step3").hidden) renderSummary();
+  });
+
+  function go(n) {
+    $("step1").hidden = n !== 1; $("step2").hidden = n !== 2; $("step3").hidden = n !== 3;
+    var items = document.querySelectorAll("#steps li");
+    var cur = n === 3 ? 2 : 1;
+    items.forEach(function (li, idx) { li.dataset.state = idx + 1 < cur ? "done" : idx + 1 === cur ? "active" : "todo"; });
+    $("err").textContent = "";
+    if (n === 2) { applyForm(); $("text").focus({ preventScroll: true }); }
+    window.scrollTo({ top: 0 });
+  }
+  $("backBtn").addEventListener("click", function () { go(1); });
+
+  $("text").addEventListener("input", function () { $("cnt").textContent = $("text").value.length; });
+
+  // Photos (preview only, nothing is uploaded from this page)
+  $("file").addEventListener("change", function (e) {
+    Array.prototype.slice.call(e.target.files).forEach(function (f) {
+      if (state.files.length < 3 && /^image\//.test(f.type)) state.files.push({ file: f, url: URL.createObjectURL(f) });
+    });
+    e.target.value = ""; renderPhotos();
+  });
+  function renderPhotos() {
+    var wrap = $("photos");
+    wrap.querySelectorAll(".thumb").forEach(function (n) { n.remove(); });
+    state.files.forEach(function (f, idx) {
+      var d = document.createElement("div"); d.className = "thumb";
+      var img = document.createElement("img"); img.src = f.url; img.alt = "";
+      var x = document.createElement("button"); x.type = "button"; x.textContent = "×"; x.setAttribute("aria-label", "Remove");
+      x.addEventListener("click", function () { URL.revokeObjectURL(f.url); state.files.splice(idx, 1); renderPhotos(); });
+      d.appendChild(img); d.appendChild(x); wrap.insertBefore(d, $("dropLbl"));
+    });
+    $("dropLbl").style.display = state.files.length >= 3 ? "none" : "";
+  }
+
+  function renderSummary() {
+    var t = T[lang], s = $("summary"); s.innerHTML = "";
+    $("doneTitle").textContent = state.rating === "down" ? t.doneTitleDown : t.doneTitle;
+    $("doneText").textContent = t.doneText;
+    $("doneText").hidden = state.rating === "down";
+    $("summary").hidden = state.rating === "down";
+    $("againBtn").hidden = state.rating === "down";
+    var v = document.createElement("div"); v.className = "verdict " + state.rating;
+    v.innerHTML = state.rating === "up" ? UP : DOWN;
+    var vt = document.createElement("span"); vt.textContent = t.labels[state.rating]; v.appendChild(vt);
+    var p = document.createElement("p"); p.textContent = state.text || t.noText;
+    var meta = document.createElement("small");
+    var bits = state.topics.slice().sort().map(function (k) { return t.topics[k]; });
+    if (state.files.length) bits.push(state.files.length + t.photosN);
+    if (state.name) bits.push(state.name);
+    meta.textContent = bits.join(" · ");
+    s.appendChild(v); s.appendChild(p); if (bits.length) s.appendChild(meta);
+  }
+
+  $("step2").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var t = T[lang];
+    if (!state.rating) { $("err").textContent = t.errRating; return; }
+    if (state.rating === "down") {
+      if (!$("text").value.trim()) { $("err").textContent = t.errText; $("text").focus(); return; }
+    } else if (!$("consent").checked) { $("err").textContent = t.errConsent; return; }
+    state.text = $("text").value.trim(); state.name = $("name").value.trim();
+    renderSummary(); go(3);
+  });
+
+  $("againBtn").addEventListener("click", function () {
+    state.rating = ""; state.topics = []; state.text = ""; state.name = "";
+    state.files.forEach(function (f) { URL.revokeObjectURL(f.url); }); state.files = [];
+    $("text").value = ""; $("name").value = ""; $("cnt").textContent = "0"; $("consent").checked = false;
+    renderPhotos(); applyLang(); go(1);
+  });
+
+  applyLang(); renderPhotos();
+})();
+</script>
+
+</body>
+</html>
