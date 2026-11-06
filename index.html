@@ -397,6 +397,7 @@ textarea { min-height: 120px; }
   thumbsEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".thumb-btn"); if (!btn) return;
     state.rating = btn.dataset.v; paintThumbs();
+    if (btn.dataset.v === "up") return; // Trustpilot opens via the link; no second form
     setTimeout(function () { go(2); }, 300);
   });
 
