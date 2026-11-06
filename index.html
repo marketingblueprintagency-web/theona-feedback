@@ -278,6 +278,7 @@ textarea { min-height: 120px; }
   // Per store, change only these values.
   var CONFIG = {
     brand: "Theona",
+    klaviyoId: "YkHTi6",
     trustpilotUrl: "https://uk.trustpilot.com/evaluate/theona.gr", // Both thumbs open this link.
     incentive: { count: 10, percent: 100 } // Reward banner is on.
   };
@@ -397,7 +398,13 @@ textarea { min-height: 120px; }
   thumbsEl.addEventListener("click", function (e) {
     var btn = e.target.closest(".thumb-btn"); if (!btn) return;
     state.rating = btn.dataset.v; paintThumbs();
-    if (btn.dataset.v === "up") return; // Trustpilot opens via the link; no second form
+    if (btn.dataset.v === "up") { // Trustpilot opens via the link; no second form
+      try {
+        var em = new URLSearchParams(location.search).get("email");
+        if (em) fetch("https://a.klaviyo.com/api/track?data=" + encodeURIComponent(btoa(JSON.stringify({ token: CONFIG.klaviyoId, event: "positive_review", customer_properties: { $email: em }, properties: {}, time: Math.floor(Date.now() / 1000) }))), { mode: "no-cors", keepalive: true }).catch(function () {});
+      } catch (x) {}
+      return;
+    }
     setTimeout(function () { go(2); }, 300);
   });
 
